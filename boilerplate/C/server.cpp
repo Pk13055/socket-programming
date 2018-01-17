@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string.h>
 #define PORT 8080
@@ -11,7 +13,7 @@ int main(int argc, char const *argv[])
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
-    char *hello = "Hello from server";
+    char hello[] = "Hello from server";
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)  // creates socket, SOCK_STREAM is for TCP. SOCK_DGRAM for UDP
@@ -27,9 +29,9 @@ int main(int argc, char const *argv[])
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
-    address.sin_family = AF_INET;  // Address family. For IPv6, it's AF_INET6. 29 others exist like AF_UNIX etc. 
+    address.sin_family = AF_INET;  // Address family. For IPv6, it's AF_INET6. 29 others exist like AF_UNIX etc.
     address.sin_addr.s_addr = INADDR_ANY;  // Accept connections from any IP address - listens from all interfaces.
-    address.sin_port = htons( PORT );    // Server port to open. Htons converts to Big Endian - Left to Right. RTL is Little Endian
+    address.sin_port = htons((argc >= 2)? atoi(argv[1]) : PORT );    // Server port to open. Htons converts to Big Endian - Left to Right. RTL is Little Endian
 
     // Forcefully attaching socket to the port 8080
     if (bind(server_fd, (struct sockaddr *)&address,

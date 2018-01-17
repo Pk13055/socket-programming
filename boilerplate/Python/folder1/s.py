@@ -15,7 +15,7 @@ print('Server listening....')
 while True:
     conn, addr = s.accept()
     print('Got connection from', addr)
-    data = conn.recv(1024)
+    data = conn.recv(10)
     print(data)
     print('Server received', repr(data))
 
@@ -30,3 +30,4 @@ while True:
     print('Done sending')
     conn.send(b'Thank you for connecting')
     conn.close()
+    break
