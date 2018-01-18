@@ -28,7 +28,8 @@ def parseData(data):
 			}
 		else:
 			data = { 'data' : data }
-			data = data['data'].strip(' ').strip('\n').strip(' ')
+			if isinstance(data['data'], str):
+				data = data['data'].strip(' ').strip('\n').strip(' ')
 	try:
 		data['data'] = json.loads(data['data'])
 	except:

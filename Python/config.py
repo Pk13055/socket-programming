@@ -7,6 +7,8 @@
 '''
 
 import socket as sock
+import logging
+import os
 
 # default port in case port is not specified
 default_port = 8080
@@ -31,3 +33,30 @@ buf_size = buf_multiplier * buf_multiple
 
 # THREADS
 threads = 1
+
+# logging
+logging_level = 0
+log_file = os.path.join(os.getcwd(), "server.log")
+FORMAT = '\033[92m%(asctime)-15s %(host)s %(id)d\033[0m %(message)s'
+logging.basicConfig(level=logging_level, format=FORMAT,\
+		handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(log_file),
+    ])
+logger = logging.getLogger('server')
+
+
+# FILE LOCATIONS
+
+SERVER_SENT = 'sent_files'
+SERVER_RECEIVED = 'received_files'
+SERVER_STORE = 'pending_files'
+
+CLIENT_SENT = 'sent_files'
+CLIENT_RECEIVED = 'received_files'
+CLIENT_STORE = 'pending_files'
+
+# REQUEST TYPES
+IS_FILE = 0
+GET_FILE = 1
+PUSH_FILE = 2

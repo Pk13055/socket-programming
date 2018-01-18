@@ -6,13 +6,12 @@
 
 '''
 
-
 import os
 import sys
-import socket as sock
 import json
 import random
 from sys import argv as rd
+from time import sleep
 
 sys.path.append(os.path.join(os.getcwd(), '..'))
 import config
@@ -25,8 +24,10 @@ def connectToServer(socket, host, port):
 	id = random.randint(1, config.queue_length)
 	try:
 		socket.connect((host, port))
-		req = makeRequest({'id' : id}, {'status' : True })
+		req = makeRequest({'id' : id}, {'filename' : rd[2] })
 		socket.send(req)
+		data = socket.recv(config.buf_size)
+		print(json.dumps(parseData(data), indent=4))
 		return True, id
 	except OSError as e:
 		print("Connection Failed", str(e))
