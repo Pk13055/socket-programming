@@ -2,22 +2,23 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #define PORT 8080
+
+#define PACKET_SIZE 1
 
 int main(int argc, char const *argv[])
 {
     struct sockaddr_in address;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
-<<<<<<< HEAD:C/client.c
-    char *hello = "file1.txt";
-=======
-    char hello[] = "Hello from client";
->>>>>>> cb8700cd1578226dc4faf8b997f1e3594d81e8df:boilerplate/C/client.cpp
+    char *filename = "file1.txt";
     char buffer[1024] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
@@ -29,10 +30,9 @@ int main(int argc, char const *argv[])
                                                 // which is meant to be, and rest is defined below
 
     serv_addr.sin_family = AF_INET;
-    // setting the port
-    serv_addr.sin_port = htons((argc >= 2)? atoi(argv[1]) : PORT);
+    serv_addr.sin_port = htons(PORT);
 
-    // Converts an IP address in numbers-and-dots notation into either a
+    // Converts an IP address in numbers-and-dots notation into either a 
     // struct in_addr or a struct in6_addr depending on whether you specify AF_INET or AF_INET6.
     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)
     {
@@ -45,9 +45,38 @@ int main(int argc, char const *argv[])
         printf("\nConnection Failed \n");
         return -1;
     }
-    send(sock , hello , strlen(hello) , 0 );  // send the message.
-    printf("Hello message sent\n");
-    valread = read( sock , buffer, 1024);  // receive message back from server, into the buffer
-    printf("%s\n",buffer );
+    
+    send(sock , filename , strlen(filename) , 0 );  // send the message.
+    printf("File name sent\n");
+    
+    int fd = open(filename, O_CREAT | O_WRONLY, S_IRWXU);
+    // error handling for opening the file
+    if ( fd < 0 ) {
+      perror("File failed to open.");
+      return 1;
+    }
+
+    while(1) {
+      valread = read( sock , buffer, 1);
+      // receive message back from server, into the buffer
+
+      if ( valread == 0 ) {
+        break;
+      }
+
+      else if (valread < 0) {
+        perror("Unable to receive contents.");
+        return 1;
+      }
+
+      // test print
+      printf("%s\n",buffer );
+
+      write(fd, buffer, strlen(buffer));
+
+      strcpy("", buffer);
+    }
+    
+    close(fd);
     return 0;
 }
