@@ -5,8 +5,16 @@
 	the board
 '''
 import json
+import shlex
 import os
 import sys
+
+
+def parseArguments(argv):
+	''' parse the command line arguments
+	'''
+	options = shlex.split(argv)
+	return list(filter(lambda x: x[0] == "@", options))
 
 def parseData(data):
 	'''

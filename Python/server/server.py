@@ -31,13 +31,49 @@ def startServer(socket, host, port):
 		return False, e.errno
 
 
-def processRequest(request):
+def processRequest(request, connections):
 	''' depending on receive/send/etc
 		process request and send appropriate
 		response
 	'''
 	response = {}
-	return response
+	id = None
+
+	if 'headers' not in request:
+		response['message'] = "Invalid Request"
+		return response, id
+	try:
+		id = request['headers']['id']
+	except:
+		response['message'] = "Unsupported Request"
+		id = None
+		return response, id
+
+	if id not in connections:
+		# handle the initial addition of connnection
+		try:
+			conn_init = request['data']['connect']
+			connections[id] = [request]
+			response = {
+				'connect' : "CONNECTED"
+			}
+		except IndexError:
+			response = {
+				'connect' : False
+			}
+	elif 'connect' in request['data']:
+		# disconnected (and potentially) other
+		# connection requests
+		conn_stat = request['data']['connect']
+		if conn_stat == "DISCONNECT":
+			connections.pop(id)
+			response = {
+				'connect' : "DISCONNECTED"
+			}
+	else:
+		# other file requests
+		pass
+	return response, id
 
 
 def receiveConnections(sock, logger = None):
@@ -45,8 +81,8 @@ def receiveConnections(sock, logger = None):
 		receival of requests and their
 		processing
 	'''
-
 	req_count = 1
+	active_connections = {}
 	while 'q' not in str(input()):
 
 		# accept an incoming request
@@ -56,17 +92,15 @@ def receiveConnections(sock, logger = None):
 
 		raw_data = conn.recv(config.buf_size)
 		request = parseData(raw_data)
-		if 'headers' in request:
-			l.info(request['headers'], extra=d)
-			print(json.dumps(request['data'], indent=4))
-		else:
-			print(json.dumps(request, indent=4))
 
 		# process the request depending on type
-		response = processRequest(request)
+		response, id = processRequest(request, active_connections)
+		print(json.dumps(response, indent=4))
 
-		conn.send(makeRequest(response, {'status' : True}))
+		conn.send(makeRequest(response, { 'id' : id }))
 		req_count += 1
+
+	return active_connections
 
 
 def main():
@@ -82,7 +116,9 @@ def main():
 	if not status: sys.exit(logger)
 
 	# begin the loop to accept connections
-	receiveConnections(s, logger)
+	end_connected = receiveConnections(s, logger)
+	print("\n\n \033[91m Final Connection History \033[0m\n\n")
+	print(json.dumps(end_connected, indent=4))
 
 
 if __name__ == '__main__':

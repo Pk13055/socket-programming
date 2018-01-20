@@ -55,8 +55,3 @@ SERVER_STORE = 'pending_files'
 CLIENT_SENT = 'sent_files'
 CLIENT_RECEIVED = 'received_files'
 CLIENT_STORE = 'pending_files'
-
-# REQUEST TYPES
-IS_FILE = 0
-GET_FILE = 1
-PUSH_FILE = 2

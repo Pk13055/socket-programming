@@ -17,32 +17,47 @@ sys.path.append(os.path.join(os.getcwd(), '..'))
 import config
 from utility import *
 
-def connectToServer(socket, host, port):
+def establishConnection(socket, host, port):
 	'''
 	establish a connection to the server
 	'''
 	id = random.randint(1, config.queue_length)
 	try:
 		socket.connect((host, port))
-		req = makeRequest({'id' : id}, {'filename' : rd[2] })
-		socket.send(req)
-		data = socket.recv(config.buf_size)
-		print(json.dumps(parseData(data), indent=4))
+		print("Reaching here")
+		init_request = makeRequest({
+			'connect' : "START"
+			}, {'id' : id})
+		print(json.dumps(parseData(init_request), indent=4))
+		socket.send(init_request)
+		raw_data = socket.recv(config.buf_size)
+		print(json.dumps(parseData(raw_data), indent=4))
 		return True, id
 	except OSError as e:
 		print("Connection Failed", str(e))
 		return False, e.errno
 
+def ask(socket, options):
+	ques = parseArguments(options)
+	print(ques)
+	request = makeRequest({}, {
+		'type' : "QUERY"
+		})
+	socket.send(request)
+	response = socket.recv(config.buf_size)
+	return response
 
 def main():
 	s = config.socket
 	try:
 		PORT = int(rd[1])
 	except IndexError:
+		print("Port unavailable")
 		PORT = config.default_port
 
-	stat, id = connectToServer(s, config.host, PORT)
+	stat, id = establishConnection(s, config.host, PORT)
 	if not stat: sys.exit(id)
+	# r = asks
 
 if __name__ == '__main__':
 	main()
