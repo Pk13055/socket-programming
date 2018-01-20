@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -10,7 +11,7 @@
 
 #define PORT 8080
 
-#define PACKET_SIZE 1
+#define PACKET_SIZE 1024
 
 
 int main(int argc, char const *argv[])
@@ -36,14 +37,14 @@ int main(int argc, char const *argv[])
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
-    
-    address.sin_family = AF_INET;  // Address family. For IPv6, it's AF_INET6. 29 others exist like AF_UNIX etc. 
+
+    address.sin_family = AF_INET;  // Address family. For IPv6, it's AF_INET6. 29 others exist like AF_UNIX etc.
     address.sin_addr.s_addr = INADDR_ANY;  // Accept connections from any IP address - listens from all interfaces.
-    address.sin_port = htons( PORT );    // Server port to open. Htons converts to Big Endian - Left to Right. RTL is Little Endian
+    address.sin_port = htons( (argc >= 2)? atoi(argv[1]) : PORT );    // Server port to open. Htons converts to Big Endian - Left to Right. RTL is Little Endian
 
     // Forcefully attaching socket to the port 8080
     if (bind(server_fd, (struct sockaddr *)&address,
-                                 sizeof(address))<0)
+       sizeof(address))<0)
     {
         perror("bind failed");
         exit(EXIT_FAILURE);
@@ -59,12 +60,12 @@ int main(int argc, char const *argv[])
 
     // returns a brand new socket file descriptor to use for this single accepted connection. Once done, use send and recv
     if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-                       (socklen_t*)&addrlen))<0)
+     (socklen_t*)&addrlen))<0)
     {
         perror("accept");
         exit(EXIT_FAILURE);
     }
-    
+
     valread = read( new_socket , buffer, 1024);  // read infromation received into the buffer
     printf("File to transfer: %s\n",buffer );
 
@@ -76,30 +77,30 @@ int main(int argc, char const *argv[])
     if (fd < 0) {
       perror("File failed to open.");
       return 1;
-    }
+  }
 
-    while(1) {
-      
-      char read_buffer[2] = {0};
+  while(1) {
+
+      char read_buffer[5 * PACKET_SIZE] = {NULL};
       // try reading PACKET_SIZE characters
       // from the file
       int bytes_read = read(fd, read_buffer, PACKET_SIZE);
 
-      if (bytes_read == 0) {
-
-        // signal to end the transfer
-        send(new_socket , "" , 3 , 0 );
-        break;
-      }
-      
-      else if (bytes_read < 0) {
+      if (bytes_read < 0) {
         perror("Unable to read from file.");
         return 1;
-      }
-      
-      send(new_socket , read_buffer , strlen(read_buffer) , 0 );
     }
-    
-    printf("File contents sent\n");
-    return 0;
+      else if (bytes_read == 0) {
+        // signal to end the transfer
+        // socket, buffer, length, flags
+        printf("File sent successfully\n");
+        send(new_socket , NULL , 1, 0 );
+        break;
+    }
+
+    printf("%d bytes sent\n", bytes_read);
+    send(new_socket , read_buffer , strlen(read_buffer) , 0 );
+}
+
+return 0;
 }
