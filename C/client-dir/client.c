@@ -51,60 +51,52 @@ int main(int argc, char const *argv[])
       return -1;
     } 
 
-  int no_of_files = 1, i;
+  send(sock , filename[0] , strlen(filename[0]) , 0 );  // send the message.
+  printf("File name sent\n");
 
-  for (i = 0; i < no_of_files; i++) {
+  // open the sent file ready for receiving
+  int fd = open(filename[0], O_CREAT | O_WRONLY | O_APPEND, 0644);
 
-    send(sock , filename[i] , strlen(filename[i]) , 0 );  // send the message.
-    printf("File name sent\n");
+  // error handling for opening the file
+  if ( fd < 0 ) {
+    perror("File failed to open.");
+    return 1;
+  }
 
-    // open the sent file ready for receiving
-    int fd = open(filename[i], O_CREAT | O_WRONLY | O_APPEND, 0644);
 
-    // error handling for opening the file
-    if ( fd < 0 ) {
-      perror("File failed to open.");
+  int   current_received = 0;
+  bool first_run = true;
+  // start IO loop to gather the file packets
+  while(1) {
+
+    // test print
+    printf("READING: ");
+    // receive message back from server, into the buffer
+    valread = read(sock , buffer, PACKET_SIZE);
+
+
+    // test print
+    printf(" %d bytes\n",valread);
+
+    // test print
+    if (valread < 0) {
+      perror("Unable to receive contents.");
       return 1;
     }
 
-
-    int   current_received = 0;
-    bool first_run = true;
-    // start IO loop to gather the file packets
-    while(1) {
-
-      // test print
-      printf("READING: ");
-      // receive message back from server, into the buffer
-      valread = read(sock , buffer, PACKET_SIZE);
-
-
-      // test print
-      printf(" %d bytes\n",valread);
-
-      // test print
-      if (valread < 0) {
-        perror("Unable to receive contents.");
-        return 1;
-      }
-
-      else if ( valread == 0 ) {
-        printf((first_run)? "No" : "Complete");
-        printf(" file received\n");
-        break;
-      }
-
-      first_run = false;
-      current_received += valread;
-
-      write(fd, buffer, valread);
+    else if ( valread == 0 ) {
+      printf((first_run)? "No" : "Complete");
+      printf(" file received\n");
+      break;
     }
 
-    printf("Total bytes received: %d\n", current_received);
-    close(fd);
-  
+    first_run = false;
+    current_received += valread;
+
+    write(fd, buffer, valread);
   }
 
-  send(sock , "0" , 1 , 0 );  // send the ending messgae
+  printf("Total bytes received: %d\n", current_received);
+  close(fd);
   return 0;
 }
