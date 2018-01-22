@@ -13,7 +13,11 @@ int main(int argc, char const *argv[])
     struct sockaddr_in address;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
+<<<<<<< HEAD:C/client.c
+    char *hello = "file1.txt";
+=======
     char hello[] = "Hello from client";
+>>>>>>> cb8700cd1578226dc4faf8b997f1e3594d81e8df:boilerplate/C/client.cpp
     char buffer[1024] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
