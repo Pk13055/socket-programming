@@ -38,20 +38,16 @@ threads = 1
 logging_level = 0
 log_file = os.path.join(os.getcwd(), "server.log")
 FORMAT = '\033[92m%(asctime)-15s %(host)s %(id)d\033[0m %(message)s'
-logging.basicConfig(level=logging_level, format=FORMAT,\
-		handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler(log_file),
-    ])
+logging.basicConfig(level=logging_level, format=FORMAT,
+                    handlers=[
+                        logging.StreamHandler(),
+                        logging.FileHandler(log_file),
+                    ])
 logger = logging.getLogger('server')
 
 
 # FILE LOCATIONS
 
-SERVER_SENT = 'sent_files'
-SERVER_RECEIVED = 'received_files'
-SERVER_STORE = 'pending_files'
+SERVER_STORE = os.path.join(os.getcwd(), 'Data')
+CLIENT_STORE = os.path.join(os.getcwd(), 'Data')
 
-CLIENT_SENT = 'sent_files'
-CLIENT_RECEIVED = 'received_files'
-CLIENT_STORE = 'pending_files'

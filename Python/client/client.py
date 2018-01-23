@@ -17,35 +17,44 @@ sys.path.append(os.path.join(os.getcwd(), '..'))
 import config
 from utility import *
 
-def establishConnection(socket, host, port):
+def establishConnection(socket, host, id, port, typ):
 	'''
 	establish a connection to the server
 	'''
-	id = random.randint(1, config.queue_length)
 	try:
 		socket.connect((host, port))
-		print("Reaching here")
+		if typ:
+			connexion = "START"
+		else:
+			connexion = "DISCONNECT"
 		init_request = makeRequest({
-			'connect' : "START"
+			'connect' : connexion
 			}, {'id' : id})
-		print(json.dumps(parseData(init_request), indent=4))
+		printJ(parseData(init_request))
 		socket.send(init_request)
 		raw_data = socket.recv(config.buf_size)
-		print(json.dumps(parseData(raw_data), indent=4))
-		return True, id
+		response = parseData(raw_data)
+		print("Response : ")
+		printJ(response)
+		if 'connect' in response['data']:
+			if "CONNECT" in response['data']['connect']:
+				return True, id
+			elif response['data']['connect'] == "ALREADY":
+				return True, None
+		else:
+			raise OSError
 	except OSError as e:
 		print("Connection Failed", str(e))
 		return False, e.errno
 
-def ask(socket, options):
-	ques = parseArguments(options)
-	print(ques)
-	request = makeRequest({}, {
-		'type' : "QUERY"
-		})
-	socket.send(request)
+def ask(socket, id, options, host, port):
+	socket.connect((host, port))
+	request = parseArguments(options, id)
+	print("Request : ")
+	printJ(request)
+	socket.send(makeRequest(request))
 	response = socket.recv(config.buf_size)
-	return response
+	return parseData(response)
 
 def main():
 	s = config.socket
@@ -54,10 +63,31 @@ def main():
 	except IndexError:
 		print("Port unavailable")
 		PORT = config.default_port
+	try:
+		id = int(rd[2])
+	except:
+		id = random.randint(1, config.queue_length)
 
-	stat, id = establishConnection(s, config.host, PORT)
-	if not stat: sys.exit(id)
-	# r = asks
+	# other mechanism for non-persistent
+	if "-non-persistent" in rd:
+		return True
+
+	# to establish the initial connection
+	# persistent connection by default
+	if "-connect" in rd or "-disconnect" in rd:
+		typ = "-connect" in rd
+		stat, id = establishConnection(s, config.host, id, PORT, typ)
+		if not stat: sys.exit(id)
+	elif "-connected" in rd:
+		resp = ask(s, id, rd, config.host, PORT)
+		print("Response : ")
+		printJ(resp)
+		return True
+	else:
+		print("Every request must be -connected or -connect type")
+		return False
+
+
 
 if __name__ == '__main__':
 	main()

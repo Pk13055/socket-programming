@@ -9,7 +9,7 @@
 import os
 import sys
 import json
-from time import sleep
+import datetime
 from sys import argv as rd
 
 sys.path.append(os.path.join(os.getcwd(), '..'))
@@ -57,22 +57,45 @@ def processRequest(request, connections):
 			response = {
 				'connect' : "CONNECTED"
 			}
-		except IndexError:
+		except Exception as e:
 			response = {
-				'connect' : False
+				'connect' : False,
+				'reason' : "CONNECT FIRST; " + str(e)
 			}
+		return response, id
+
 	elif 'connect' in request['data']:
 		# disconnected (and potentially) other
 		# connection requests
+		connections[id].append(request)
 		conn_stat = request['data']['connect']
 		if conn_stat == "DISCONNECT":
-			connections.pop(id)
+			try:
+				connections.pop(id)
+				response = {
+					'connect' : "DISCONNECTED"
+				}
+			except Exception as e:
+				response = {
+					'connect' : "CONNECT FIRST; " + str(e)
+				}
+		elif conn_stat == "START":
 			response = {
-				'connect' : "DISCONNECTED"
+				'connect' : "ALREADY"
 			}
-	else:
-		# other file requests
-		pass
+		return response, id
+
+	# other file requests
+	# process main requests here
+	connections[id].append(request)
+	actions, targets = request['headers']['commands'], request['data']
+	if "--list-files" in actions:
+		response['files'] = os.listdir(config.SERVER_STORE)
+
+	elif "--receive-files" in actions:
+		files = targets
+		response['files'] = files
+
 	return response, id
 
 
@@ -92,10 +115,13 @@ def receiveConnections(sock, logger = None):
 
 		raw_data = conn.recv(config.buf_size)
 		request = parseData(raw_data)
+		print("Request")
+		printJ(request)
 
 		# process the request depending on type
 		response, id = processRequest(request, active_connections)
-		print(json.dumps(response, indent=4))
+		print("Response")
+		printJ(response)
 
 		conn.send(makeRequest(response, { 'id' : id }))
 		req_count += 1
@@ -116,9 +142,13 @@ def main():
 	if not status: sys.exit(logger)
 
 	# begin the loop to accept connections
+	start_time = datetime.datetime.now().isoformat('T')
 	end_connected = receiveConnections(s, logger)
+	s.close()
+	# display final history and store to file
 	print("\n\n \033[91m Final Connection History \033[0m\n\n")
-	print(json.dumps(end_connected, indent=4))
+	printJ(end_connected)
+	json.dump({ start_time : end_connected}, open('connections.json', 'w'))
 
 
 if __name__ == '__main__':
