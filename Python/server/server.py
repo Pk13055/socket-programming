@@ -105,7 +105,7 @@ def processRequest(socket, request, connections):
 	# other file requests
 	# process main requests here
 	connections[id].append(request)
-	active_connections, targets = request['headers']['commands'], request['data']
+	actions, targets = request['headers']['commands'], request['data']
 	if "--list-files" in actions:
 		response['files'] = os.listdir(config.SERVER_STORE)
 
