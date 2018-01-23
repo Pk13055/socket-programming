@@ -31,6 +31,9 @@ buf_multiplier = 1
 # the incoming message size can atmost be of this size
 buf_size = buf_multiplier * buf_multiple
 
+# packet size of raw data to transfer
+packet_size = 1024
+
 # THREADS
 threads = 1
 

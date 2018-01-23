@@ -47,12 +47,47 @@ def establishConnection(socket, host, id, port, typ):
 		print("Connection Failed", str(e))
 		return False, e.errno
 
+def receiveFiles(socket, id):
+	''' function to receive the files requested
+	'''
+	file_list = []
+	"""
+		# RECEIVE START REQ
+		# SEND okay
+		# Receive x Number of packets
+		# SEND OKAY FOR EACH
+		# RECEIVE STOP REQ
+		# SEND okay
+	"""
+	init_req = socket.recv(config.buf_size)
+	request = parseData(init_req)
+	printJ(request)
+	# send receive
+	while True:
+		init_req = socket.recv(config.buf_size)
+		request = parseData(init_req)
+		printJ(request)
+		# handle start stop here
+		if 'status' in request['headers']:
+			cur_status = request['headers']['status']
+			if cur_status == "START":
+				pass
+			elif cur_status == "STOP":
+				pass
+		elif 'files' in request['data']:
+			# handle the complete transfer of files
+			break
+	return False
+
 def ask(socket, id, options, host, port):
 	socket.connect((host, port))
 	request = parseArguments(options, id)
 	print("Request : ")
 	printJ(request)
 	socket.send(makeRequest(request))
+	if "--receive-files" in request['headers']['commands']:
+		print("Receiving Files")
+		receiveFiles(socket, id)
 	response = socket.recv(config.buf_size)
 	return parseData(response)
 

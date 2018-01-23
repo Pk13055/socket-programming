@@ -1,1 +1,1 @@
-{"2018-01-23T10:04:26.164299": {}}
+{"2018-01-23T10:55:48.278473": {"1": [{"headers": {"id": 1}, "data": {"connect": "START"}}, {"headers": {"id": 1, "commands": ["--list-files"]}, "data": []}, {"headers": {"id": 1, "commands": ["--receive-files"]}, "data": ["6.txt", "5.txt"]}]}}{"2018-01-23T14:01:24.620578": {"1": [{"headers": {"id": 1}, "data": {"connect": "START"}}, {"headers": {"id": 1}, "data": {"connect": "START"}}, {"headers": {"id": 1, "commands": ["--list-files"]}, "data": []}]}}
