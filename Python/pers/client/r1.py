@@ -1,8 +1,11 @@
-import socket                   
+#!/usr/bin/env python2
 
-s = socket.socket()             
-host = ""
-port = 6009                
+import socket
+import os
+from sys import argv as rd
+s = socket.socket()
+host = "127.0.0.1"
+port = int(rd[1])
 
 s.connect((host, port))
 # s.send("Hello server!")
@@ -10,7 +13,7 @@ s.connect((host, port))
 while 1:
     f_input = raw_input('enter file name: ')
     s.send(f_input);
-    with open(f_input, 'wb') as f:
+    with open(os.path.join("Data", f_input), 'wb') as f:
         print 'file opened'
         while True:
             print('receiving data...')

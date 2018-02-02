@@ -1,11 +1,14 @@
-import socket
+#!/usr/bin/env python2
 
-port = 6009
+import socket
+import os
+from sys import argv as rd
 s = socket.socket()
-host = ""
+host = "127.0.0.1"
+port = int(rd[1])
 
 s.bind((host, port))
-s.listen(5)
+s.listen(10)
 
 # filename = raw_input("Enter file to share:")
 print 'Server listening....'
@@ -15,9 +18,9 @@ while True:
     print 'Got connection from', addr
     f_recv = conn.recv(1024)
     # print data
-    
 
-    f = open(f_recv,'rb')
+
+    f = open(os.path.join("Data", f_recv),'rb')
     l = f.read(1024)
     while (l):
        conn.send(l)
